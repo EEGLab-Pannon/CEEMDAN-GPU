@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 /* Compile the code on linux as follows after changing the -arch parameter to mathc your target device */
-//nvcc -arch=sm_70 -Xcompiler -fopenmp -lcublas -lcusparse -lcurand ./cudaCEEMDAN.cu -o CUDA_CEEMDAN
+//nvcc -arch=sm_70 -Xcompiler -fopenmp -lcublas -lcusparse -lcurand ./demo.cu -o CUDA_CEEMDAN
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
@@ -39,7 +39,6 @@ SOFTWARE.
 #include <curand.h>
 #include <cub/cub.cuh> 
 #include <cuda.h>
-#include "statistics.h"
 
 template <typename real_t>
 __global__ void produceFirstIMF(real_t* d_IMFs, real_t* d_running, real_t* d_noisedSignal, real_t* d_currentModes, real_t* d_forNext, size_t numNoise, size_t signalLength)
@@ -617,44 +616,6 @@ __global__ void updateSignal(real_t* d_current, real_t* d_whiteNoise, size_t num
     {
         d_whiteNoise[idx] = d_whiteNoise[idx] - d_current[idx];
     }
-}
-
-int getBinSize(char* path)
-{
-    int  size = 0;
-    FILE* fp = fopen(path, "rb");
-    if (fp)
-    {
-        fseek(fp, 0, SEEK_END);
-        size = ftell(fp);
-        fclose(fp);
-    }
-    //printf("\npath=%s,size=%d \n", path, size);
-    return size;
-}
-
-void readBin(char* path, char* buf, size_t size)
-{
-    FILE* infile;
-    if ((infile = fopen(path, "rb")) == NULL)
-    {
-        printf("\nCan not open the path: %s \n", path);
-        exit(-1);
-    }
-    fread(buf, sizeof(char), size, infile);
-    fclose(infile);
-}
-
-void writeBin(char* path, char* buf, size_t size)
-{
-    FILE* outfile;
-    if ((outfile = fopen(path, "wb")) == NULL)
-    {
-        printf("\nCan not open the path: %s \n", path);
-        exit(-1);
-    }
-    fwrite(buf, sizeof(char), size, outfile);
-    fclose(outfile);
 }
 
 template <typename coord_t, typename real_t>
@@ -1377,153 +1338,4 @@ double ceemdan(size_t numNoise, size_t SignalLength, size_t num_IMFs, size_t max
     cudaFree(d_temStorage);
 
     return diff;
-}
-
-
-void runBenchmark()
-{
-    //int maxIterationsIdx = 50;
-    //int numRealizationsIdx = 50;
-    //int sigLenIdx = 118;
-    float noiseStrength = 0.2;
-    size_t num_IMFs = 13;
-    char filePath[] = "./eegSampleDataCH1_244032.bin";
-    int maxIterations[55] = {10, 10, 20, 50, 100, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
-                              1100,	1200, 1300,	1400, 1500,	1600, 1700,	1800, 1900,	2000,
-                              2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000,
-                              3100, 3200, 3300, 3400, 3500, 3600, 3700, 3800, 3900, 4000,
-                              4100, 4200, 4300, 4400, 4500, 4600, 4700, 4800, 4900, 5000};
-
-    int numRealizaitons[51] = { 2, 10,	20,	30,	40,	50,	60,	70,	80,	90,	100,
-                                110, 120, 130, 140, 150, 160, 170, 180, 190, 200,
-                                210, 220, 230, 240, 250, 260, 270, 280, 290, 300,
-                                310, 320, 330, 340, 350, 360, 370, 380, 390, 400,
-                                410, 420, 430, 440, 450, 460, 470, 480, 490, 500};
-
-    int signalLength[119] = { 2049, 2049, 4097, 6145, 8193, 10241, 12289, 14337, 16385, 18433, 20481,
-                            22529, 24577, 26625, 28673, 30721, 32769, 34817, 36865, 38913, 40961,
-                            43009, 45057, 47105, 49153,	51201, 53249, 55297, 57345,	59393, 61441,
-                            63489, 65537, 67585, 69633,	71681, 73729, 75777, 77825,	79873, 81921,
-                            83969, 86017, 88065, 90113,	92161, 94209, 96257, 98305,	100353, 102401,
-                            104449,	106497,	108545, 110593, 112641, 114689,	116737,	118785,	120833,
-                            122881,	124929,	126977,	129025,	131073,	133121,	135169,	137217,	139265,
-                            141313,	143361, 145409, 147457, 149505,	151553,	153601,	155649,	157697,
-                            159745,	161793,	163841,	165889,	167937,	169985,	172033,	174081, 176129,
-                            178177,	180225,	182273,	184321,	186369,	188417,	190465,	192513,	194561,
-                            196609,	198657,	200705,	202753,	204801,	206849,	208897,	210945,	212993,
-                            215041,	217089,	219137, 221185,	223233,	225281,	227329,	229377,	231425,
-                            233473,	235521,	237569,	239617,	241665};
-
-    for (int sigLenIdx = 50; sigLenIdx <= 50; sigLenIdx = sigLenIdx + 5)
-    {
-        float* h_y, * d_y;
-        int* h_x, * d_x;
-
-        // get data size
-        const size_t SignalLength = signalLength[sigLenIdx];
-        size_t oneChannelNbytes_coord = SignalLength * sizeof(int);
-        size_t oneChannelNbytes_real = SignalLength * sizeof(float);
-
-        // allocate array on host
-        h_x = (int*)malloc(oneChannelNbytes_coord);
-        h_y = (float*)malloc(oneChannelNbytes_real);
-
-        // allocate array on device
-        cudaMalloc((void**)&d_x, oneChannelNbytes_coord);
-        cudaMalloc((void**)&d_y, oneChannelNbytes_real);
-
-        // load data
-        char* buf = (char*)malloc(oneChannelNbytes_real);
-        readBin(filePath, buf, oneChannelNbytes_real);
-        h_y = (float*)buf;
-
-        // generate data index
-        for (size_t i = 0; i < SignalLength; i++) {
-            h_x[i] = (int)i;
-        }
-
-        // copy data to device
-        cudaMemcpy(d_x, h_x, oneChannelNbytes_coord, cudaMemcpyHostToDevice);
-        cudaMemcpy(d_y, h_y, oneChannelNbytes_real, cudaMemcpyHostToDevice);
-
-        // allocate memory for output
-        float* d_IMFs = NULL;
-        cudaMalloc(&d_IMFs, num_IMFs * SignalLength * sizeof(float));
-        float* IMFs = (float*)malloc(num_IMFs * SignalLength * sizeof(float));
-
-        //ceemdan processing
-        for (int maxIterationsIdx = 1; maxIterationsIdx <= 3; maxIterationsIdx = maxIterationsIdx + 1)
-        {
-            for (int numRealizationsIdx = 50; numRealizationsIdx <= 50; numRealizationsIdx = numRealizationsIdx + 5)
-            {
-                FILE* fp = fopen("printout.txt", "a+");
-                size_t numNoise = numRealizaitons[numRealizationsIdx];
-                size_t max_iter = maxIterations[maxIterationsIdx];
-                double exeTime = ceemdan(numNoise, SignalLength, num_IMFs, max_iter, d_x, d_y, d_IMFs, noiseStrength);
-                printf("numMaxIterations: %d; numNoise: %d; signalLength: %d; Execution time: %f \n", max_iter, numNoise, SignalLength, exeTime);
-                fprintf(fp, "numMaxIterations: %d; numNoise: %d; signalLength: %d; Execution time: %f \n", max_iter, numNoise, SignalLength, exeTime);
-                fclose(fp);
-            }
-        }
-        cudaFree(d_y);
-        cudaFree(d_x);
-        cudaFree(d_IMFs);
-    }
-}
-
-int main()
-{
-//    runBenchmark();
-
-    //============================= Single run of CEEMDAN =============================
-
-    //configuration for the input signal
-    size_t numNoise = 20;
-    size_t num_IMFs = 3;
-    size_t max_iter = 300;
-    float noiseStrength = 0.2;
-
-    float* h_y, * d_y;
-    int* h_x, * d_x;
-
-    // get data size
-    char filePathInput[] = "./eegSampleDataCH4.bin";
-    size_t nbytes = getBinSize(filePathInput); // in bytes
-    const size_t SignalLength = nbytes / sizeof(float);
-    size_t oneChannelNbytes_coord = SignalLength * sizeof(int);
-    size_t oneChannelNbytes_real = SignalLength * sizeof(float);
-
-    // allocate array on host
-    h_x = (int*)malloc(oneChannelNbytes_coord);
-    h_y = (float*)malloc(oneChannelNbytes_real);
-
-    // allocate array on device
-    cudaMalloc((void**)&d_x, oneChannelNbytes_coord);
-    cudaMalloc((void**)&d_y, oneChannelNbytes_real);
-
-    // load data
-    char* buf = (char*)malloc(oneChannelNbytes_real);
-    readBin(filePathInput, buf, oneChannelNbytes_real);
-    h_y = (float*)buf;
-
-    // generate data index
-    for (size_t i = 0; i < SignalLength; i++) {
-        h_x[i] = (int)i;
-    }
-
-    // copy data to device
-    cudaMemcpy(d_x, h_x, oneChannelNbytes_coord, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_y, h_y, oneChannelNbytes_real, cudaMemcpyHostToDevice);
-
-    //ceemdan processing
-    float* d_IMFs = NULL;
-    cudaMalloc(&d_IMFs, num_IMFs * SignalLength * sizeof(float));
-    float* IMFs = (float*)malloc(num_IMFs * SignalLength * sizeof(float));
-
-    double exeTime = ceemdan(numNoise, SignalLength, num_IMFs, max_iter, d_x, d_y, d_IMFs, noiseStrength);
-
-    printf("Execution time: %f \n", exeTime);
-    cudaMemcpy(IMFs, d_IMFs, num_IMFs * SignalLength * sizeof(float), cudaMemcpyDeviceToHost);
-    char IMFs_file[] = "./modes.bin";
-    writeBin(IMFs_file, (char*)IMFs, num_IMFs * SignalLength * sizeof(float));
 }
