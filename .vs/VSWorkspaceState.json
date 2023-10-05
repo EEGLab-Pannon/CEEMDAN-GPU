@@ -1,7 +1,8 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\MatlabMEXCUDA"
   ],
-  "SelectedNode": "\\sample_binary_file.cu",
+  "SelectedNode": "\\MatlabMEXCUDA",
   "PreviewInSolutionExplorer": false
 }
