@@ -7,3 +7,6 @@ and implemented in MATLAB available at http://perso.ens-lyon.fr/patrick.flandrin
 
 Our version achieves several orders of magnitude higher speed compared to the MATLAB implementation, reducing the execution time from hours (even days) to seconds.
 
+If you download and use our program, please cite the following paper in your relevant publications: 
+Wang Z, Juhasz Z. GPU Implementation of the Improved CEEMDAN Algorithm for Fast and Efficient EEG Time–Frequency Analysis. Sensors. 2023; 23(20):8654. https://doi.org/10.3390/s23208654 
+
