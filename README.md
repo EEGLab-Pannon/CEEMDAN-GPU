@@ -12,5 +12,6 @@ If you download and use our program, please cite the following paper in your rel
 - Wang Z, Juhasz Z. GPU Implementation of the Improved CEEMDAN Algorithm for Fast and Efficient EEG Time–Frequency Analysis. Sensors. 2023; 23(20):8654. https://doi.org/10.3390/s23208654 
 
 ## Compiling and usage instructions:
+
 Compile the code on linux as follows after changing the -arch parameter to mathc your target device */
 //nvcc -arch=sm_70 -Xcompiler -fopenmp -lcublas -lcusparse -lcurand ./sample_synthetic_signal.cu ./cudaICEEMDAN.cu ./statistics.cu -o CUDA_ICEEMDAN
