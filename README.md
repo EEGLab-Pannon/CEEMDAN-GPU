@@ -21,4 +21,4 @@ The implementation can be found in the source files cudaICEEMDAN.cu and statisti
 
 On Windows systems, we recommend using the Visual Studio or Visual Studio Code environment. Create a CUDA project, place the file from this project into the source directory and add them to the VS project. After setting the necessary project configuration parameters, the project can be built. 
 
-We have also providing an implementation for direct execution from MATLAB. This can be downloaded from the [folder MatlabMEXCUDA](./MatlabMEXCUDA).
+We have also providing an implementation for direct execution from MATLAB. This can be downloaded from the folder [MatlabMEXCUDA](./MatlabMEXCUDA).
