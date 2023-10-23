@@ -17,4 +17,4 @@ The supplied code has been tested in Linux and Windows environments. On Linux, c
 
 The implementation can be found in the source files cudaICEEMDAN.cu and statistics.cu. We have provided two sample C program files that demonstrate how to use the implementation. The program sample_synthetic_signal.cu creates and uses synthetic signals, while the file sample_binary_file.cu demonstrates how to read in a binary input data file generated in, say, MATLAB and process on the GPU.      
 
-nvcc -arch=sm_70 -Xcompiler -fopenmp -lcublas -lcusparse -lcurand ./sample_synthetic_signal.cu ./cudaICEEMDAN.cu ./statistics.cu -o CUDA_ICEEMDAN
+`nvcc -arch=sm_70 -Xcompiler -fopenmp -lcublas -lcusparse -lcurand ./sample_synthetic_signal.cu ./cudaICEEMDAN.cu ./statistics.cu -o CUDA_ICEEMDAN`
